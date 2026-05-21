@@ -1,0 +1,24 @@
+# Swift Package Manager
+.build/
+Packages/
+*.xcodeproj
+*.xcworkspace
+.swiftpm/
+Package.resolved
+
+# Build script output
+dist/
+*.app
+*.zip
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+.history/
+
+# Claude Code per-machine settings
+.claude/
