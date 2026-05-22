@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!--
+    Template version of bird-perched.svg for the macOS menubar.
+    Single-color (black) silhouette; macOS NSImage(isTemplate: true) auto-tints
+    to match the menubar (white on dark mode, black on light mode).
+    No eye, no wing-fold overlay — those don't survive at 22pt menubar size.
+  -->
+  <g fill="black">
+    <path d="M 40.00 18.00 C 38.17 18.17 35.17 20.83 33.00 22.00 C 30.83 23.17 29.67 22.83 27.00 25.00 C 24.33 27.17 21.00 30.83 17.00 35.00 C 13.00 39.17 3.00 50.00 3.00 50.00 C 3.00 50.00 13.17 43.83 17.00 44.00 C 20.83 44.17 23.17 49.67 26.00 51.00 C 28.83 52.33 30.83 52.83 34.00 52.00 C 37.17 51.17 42.33 48.83 45.00 46.00 C 47.67 43.17 49.33 37.83 50.00 35.00 C 50.67 32.17 49.50 30.67 49.00 29.00 C 48.50 27.33 47.83 26.33 47.00 25.00 C 46.17 23.67 45.17 22.17 44.00 21.00 C 42.83 19.83 41.83 17.83 40.00 18.00 Z"/>
+    <path d="M 47 24 L 54 25 L 48 28 Z"/>
+    <rect x="31.2" y="50" width="1.7" height="8.2" rx="0.85"/>
+    <rect x="37.2" y="50" width="1.7" height="8.2" rx="0.85"/>
+    <rect x="14" y="57.6" width="36" height="2.6" rx="1.3"/>
+  </g>
+</svg>

@@ -16,15 +16,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            // Bird mark (Wingspan vibe). Fall back through SF Symbol variants for
-            // robustness across macOS versions, and finally to a generic icon.
-            let symbol = NSImage(systemSymbolName: "bird.fill", accessibilityDescription: "Matosic Macropad")
+            // Custom matosic bird (bundled in .app/Contents/Resources/) takes priority.
+            // SF Symbol fallback covers `swift run` dev mode where there's no .app bundle.
+            let image: NSImage? = NSImage(named: "bird-template")
+                ?? NSImage(systemSymbolName: "bird.fill", accessibilityDescription: "Matosic Macropad")
                 ?? NSImage(systemSymbolName: "bird", accessibilityDescription: "Matosic Macropad")
-                ?? NSImage(systemSymbolName: "dove.fill", accessibilityDescription: "Matosic Macropad")
-                ?? NSImage(systemSymbolName: "square.grid.3x3.fill", accessibilityDescription: "Matosic Macropad")
-            if let symbol {
-                symbol.isTemplate = true
-                button.image = symbol
+            if let image {
+                // Apple HIG: menubar icons are 18×18pt within the 22pt menubar height.
+                // PDFs come in at their viewBox size (64pt here) by default — force resize.
+                image.size = NSSize(width: 22, height: 22)
+                image.isTemplate = true
+                button.image = image
                 button.imagePosition = .imageOnly
             }
             button.action = #selector(togglePopover)

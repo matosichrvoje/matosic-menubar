@@ -12,10 +12,32 @@ struct PopoverView: View {
             Divider()
             profileList
             Divider()
+            configureLink
+            Divider()
             footer
         }
         .frame(width: 320)
         .background(.regularMaterial)
+    }
+
+    private var configureLink: some View {
+        Link(destination: URL(string: "https://macropad.hrvojematosic.com/configure")!) {
+            HStack(spacing: 6) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 11, weight: .semibold))
+                Text("Configure macropad")
+                    .font(.system(.body, design: .monospaced))
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .foregroundStyle(Color(red: 0.176, green: 0.290, blue: 0.208))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var header: some View {
