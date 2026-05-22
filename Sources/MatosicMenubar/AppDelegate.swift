@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var popover: NSPopover!
     private let focus = FocusObserver()
     private let store = ProfileStore()
+    private let clipboard = ClipboardWatcher()
     private var cancellables = Set<AnyCancellable>()
     private var eventMonitor: Any?
 
@@ -36,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover = NSPopover()
         popover.behavior = .transient
         let hosting = NSHostingController(
-            rootView: PopoverView(focus: focus, store: store)
+            rootView: PopoverView(focus: focus, store: store, clipboard: clipboard)
         )
         // Let SwiftUI's intrinsic size drive the popover; otherwise a fixed
         // contentSize clips the bottom (Quit button) when content grows.

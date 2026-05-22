@@ -17,6 +17,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - USB HID roundtrip to the macropad: focus change → host sends layer-switch command → macropad physical layer follows the active app. Blocked on the macropad firmware migrating from CircuitPython to QMK so a Raw HID channel exists.
 
+## [0.1.1] — 2026-05-22
+
+### Added
+
+- **"Save screenshots" toggle** in the popover. Opt-in clipboard-image logger (off by default). When enabled, the app polls `NSPasteboard.general` every ~1.5s; new pasteboard images are saved to `YYYY-MM-DD/HHMMSS.png` under a user-picked folder (default `~/Pictures/matosic-blog/`). Designed for documentation / blog workflows where you screenshot heavily and want them organized by day without manual filing. New file: `ClipboardWatcher.swift`.
+- **"Change folder…" picker** in the popover (`NSOpenPanel`-based) so the save folder is configurable — e.g. point at an iCloud Drive folder so screenshots sync across your Macs. Selection persists in `UserDefaults` (`ClipboardWatcher.saveDirectoryPath`). Show-in-Finder button reveals the current folder. Toggle off and clipboard polling stops entirely — no background access otherwise.
+
 ## [0.1.0] — 2026-05-21
 
 Initial public release.
@@ -37,5 +44,6 @@ Initial public release.
 - No auto-launch at login.
 - No USB communication to the physical macropad yet.
 
-[Unreleased]: https://github.com/matosichrvoje/matosic-menubar/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/matosichrvoje/matosic-menubar/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/matosichrvoje/matosic-menubar/releases/tag/v0.1.1
 [0.1.0]: https://github.com/matosichrvoje/matosic-menubar/releases/tag/v0.1.0

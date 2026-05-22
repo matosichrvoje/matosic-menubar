@@ -24,6 +24,7 @@ If you can't see the bird in your menubar (common on notched MacBooks), it's hid
 - **Live menubar HUD.** Bird icon in the menubar; tooltip + popover show the active app and its bound profile.
 - **Per-app profile bindings.** Click the active-profile row → pick a profile → that app is now bound. Switches automatically the next time you focus the app.
 - **Profile library.** Ships with Default / Photoshop / VS Code / Final Cut. Edit `~/Library/Application Support/Matosic Macropad/profiles.json` to add your own.
+- **Save screenshots** *(opt-in, off by default)*. Toggle in the popover. When enabled, every image you copy to the clipboard (e.g. `Cmd-Ctrl-Shift-4`) is saved as PNG under `YYYY-MM-DD/HHMMSS.png` inside a folder you pick. Default save folder is `~/Pictures/matosic-blog/`; click **Change folder…** in the popover to point it at any directory — e.g. an iCloud Drive subfolder, so screenshots sync to your other Mac automatically. Toggle off and clipboard polling stops entirely.
 - **Stays out of your way.** No dock icon, no notifications, no telemetry, no network.
 
 ## What it doesn't do *yet*
@@ -37,11 +38,12 @@ If you can't see the bird in your menubar (common on notched MacBooks), it's hid
 
 The app reads:
 - The bundle identifier and localized name of the frontmost macOS app (via `NSWorkspace`).
+- **The clipboard — only when "Save screenshots" is toggled on** (off by default). When enabled, the app polls `NSPasteboard.general` every ~1.5s; if the clipboard contains a new image, the image is written to `YYYY-MM-DD/HHMMSS.png` under the user-picked save folder (default `~/Pictures/matosic-blog/`). macOS may show a "MatosicMenubar pasted from <app>" banner when this happens — that's the standard pasteboard-access notification, not a separate transmission. Toggle off and the polling stops entirely.
 
 It does not read:
-- Window contents, keystrokes, browser history, file contents, clipboard, or anything else.
+- Window contents, keystrokes, browser history, file contents, or anything else.
 
-It does not send any data anywhere. Everything lives in `~/Library/Application Support/Matosic Macropad/profiles.json` on your machine.
+It does not send any data anywhere. Profile bindings live in `~/Library/Application Support/Matosic Macropad/profiles.json`; when enabled, clipboard images live in `~/Pictures/matosic-blog/` — both on your machine, never transmitted.
 
 ## Build from source
 
@@ -69,6 +71,7 @@ matosic-menubar/
 │   ├── main.swift                # Entry point
 │   ├── AppDelegate.swift         # NSStatusItem + NSPopover wiring
 │   ├── FocusObserver.swift       # NSWorkspace focus notification subscriber
+│   ├── ClipboardWatcher.swift    # Opt-in pasteboard-image logger
 │   ├── Profile.swift             # Profile + binding data model
 │   ├── ProfileStore.swift        # JSON persistence
 │   └── PopoverView.swift         # SwiftUI popover content

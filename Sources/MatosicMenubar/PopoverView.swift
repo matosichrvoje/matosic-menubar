@@ -3,6 +3,7 @@ import SwiftUI
 struct PopoverView: View {
     @ObservedObject var focus: FocusObserver
     @ObservedObject var store: ProfileStore
+    @ObservedObject var clipboard: ClipboardWatcher
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -12,12 +13,68 @@ struct PopoverView: View {
             Divider()
             profileList
             Divider()
+            clipboardLogger
+            Divider()
             configureLink
             Divider()
             footer
         }
         .frame(width: 320)
         .background(.regularMaterial)
+    }
+
+    private var clipboardLogger: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Save screenshots")
+                        .font(.system(.body, design: .default).weight(.medium))
+                    Text(clipboard.isEnabled
+                         ? "Saving copied images to \(clipboard.displayPath)"
+                         : "Save any image copied to the clipboard.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Toggle("Save screenshots", isOn: $clipboard.isEnabled)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+            }
+            if clipboard.isEnabled {
+                HStack(spacing: 6) {
+                    if clipboard.savedCount > 0 {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color(red: 0.176, green: 0.290, blue: 0.208))
+                        Text("\(clipboard.savedCount) saved")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Change folder…") {
+                        clipboard.pickSaveDirectory()
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption2)
+                    Button("Show in Finder") {
+                        clipboard.revealInFinder()
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption2)
+                }
+            }
+            if let err = clipboard.lastError, clipboard.isEnabled {
+                Text("Couldn't save last image: \(err)")
+                    .font(.caption2)
+                    .foregroundStyle(.red)
+                    .lineLimit(2)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
     }
 
     private var configureLink: some View {
