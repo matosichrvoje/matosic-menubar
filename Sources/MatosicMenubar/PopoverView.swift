@@ -4,12 +4,17 @@ struct PopoverView: View {
     @ObservedObject var focus: FocusObserver
     @ObservedObject var store: ProfileStore
     @ObservedObject var clipboard: ClipboardWatcher
+    @ObservedObject var device: DeviceController
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
             Divider()
             activeBlock
+            if !device.isConnected {
+                Divider()
+                deviceOfflineLine
+            }
             Divider()
             profileList
             Divider()
@@ -21,6 +26,22 @@ struct PopoverView: View {
         }
         .frame(width: 320)
         .background(.regularMaterial)
+    }
+
+    /// Subtle "we can show you what *should* be active but can't actually
+    /// switch the macropad right now" cue. Keeps the HUD honest when the
+    /// device is unplugged. Auto-recovers silently on reconnect.
+    private var deviceOfflineLine: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "cable.connector.slash")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+            Text("Device offline — not switching layers")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
     }
 
     private var clipboardLogger: some View {

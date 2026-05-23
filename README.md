@@ -4,11 +4,11 @@ A tiny macOS menubar utility that shows which **macropad profile** is active for
 
 It watches whichever app is in focus, looks up a profile binding (e.g. *Cursor → VS Code profile*, *Photoshop → Photoshop profile*), and surfaces the active profile in your menubar with one click to switch.
 
-This is the companion app to the [Matosic Macropad](https://macropad.hrvojematosic.com) — an open-source 9-key + encoder mechanical macropad. The app works on its own as a profile-tracker HUD, and will gain device communication (auto-switching the macropad's physical layer to match the active app) once the macropad firmware migrates to QMK.
+This is the companion app to the [Matosic Macropad](https://macropad.hrvojematosic.com) — an open-source 9-key + encoder mechanical macropad. It auto-switches the macropad's active layer to match whichever app is in focus, and works as a profile-tracker HUD when the device is unplugged.
 
 ## Install
 
-> v0.1.0 is a developer preview — unsigned. Gatekeeper will warn the first time you open it. Right-click → Open the first time to bypass.
+> v0.3.0 is a developer preview — unsigned. Gatekeeper will warn the first time you open it. Right-click → Open the first time to bypass.
 
 1. Go to the [Releases page](https://github.com/matosichrvoje/matosic-menubar/releases/latest).
 2. Download `MatosicMenubar.zip`.
@@ -21,18 +21,19 @@ If you can't see the bird in your menubar (common on notched MacBooks), it's hid
 
 ## What it does today
 
-- **Live menubar HUD.** Bird icon in the menubar; tooltip + popover show the active app and its bound profile.
-- **Per-app profile bindings.** Click the active-profile row → pick a profile → that app is now bound. Switches automatically the next time you focus the app.
-- **Profile library.** Ships with Default / Photoshop / VS Code / Final Cut. Edit `~/Library/Application Support/Matosic Macropad/profiles.json` to add your own.
+- **Auto-switches the macropad's active layer to match the focused app** *(once a v0.3-compatible firmware is flashed)*. Bring VS Code to the front → the macropad jumps to your VS Code layer. Switch to Photoshop → it follows. The connection uses QMK's Raw HID interface and piggybacks on VIA's custom-channel framing, so the [web configurator](https://macropad.hrvojematosic.com/configure) keeps working unchanged. The Mac side ships today; the matching firmware handler (channel `0x10` in `via_custom_value_command_kb`) is landing in the sibling firmware repo. Without it, the menubar app still runs cleanly — bird state and HUD work — but the device ignores the layer-switch commands.
+- **Live menubar HUD.** Bird icon in the menubar; tooltip + popover show the active app and its bound profile. Bird dims and the popover shows "Device offline" when the macropad is unplugged — the HUD stays honest about what it can and can't do.
+- **Per-app profile bindings.** Click the active-profile row → pick a profile → that app is now bound. The macropad switches layers automatically next time you focus the app.
+- **Profile library.** Ships with Default / Photoshop / VS Code / Final Cut, each mapped to a device layer (Default→BASE, Photoshop→USER1, VS Code→USER2, Final Cut→USER3). Edit `~/Library/Application Support/Matosic Macropad/profiles.json` to add your own — unused layers will be assigned automatically.
 - **Save screenshots** *(opt-in, off by default)*. Toggle in the popover. When enabled, every image you copy to the clipboard (e.g. `Cmd-Ctrl-Shift-4`) is saved as PNG under `YYYY-MM-DD/HHMMSS.png` inside a folder you pick. Default save folder is `~/Pictures/matosic-blog/`; click **Change folder…** in the popover to point it at any directory — e.g. an iCloud Drive subfolder, so screenshots sync to your other Mac automatically. Toggle off and clipboard polling stops entirely.
 - **Stays out of your way.** No dock icon, no notifications, no telemetry, no network.
 
 ## What it doesn't do *yet*
 
-- **Talk to the macropad.** The current build is host-side observation only — it shows what profile *should* be active, but doesn't actually send a layer-switch command to the physical macropad. That lands once the macropad firmware migrates from CircuitPython to QMK, which exposes a Raw HID channel for this kind of bidirectional control.
-- **In-app profile editor.** You can bind apps to existing profiles via the popover; adding/renaming/deleting profiles requires hand-editing the JSON. UI editor coming in v0.2.
-- **Auto-launch at login.** Coming in v0.2 via `SMAppService`.
-- **App picker.** Currently you can only bind the currently-focused app; v0.2 adds a `/Applications`-wide picker.
+- **In-app profile editor.** You can bind apps to existing profiles via the popover; adding/renaming/deleting profiles or reassigning layer indices requires hand-editing the JSON. UI editor coming in v0.4.
+- **Visual keymap preview.** The popover shows the profile *name* but not what each macropad key does on that layer. Live 3×3 + encoder preview coming in v0.4 (it reads the current keymap from the device over the same HID channel).
+- **Auto-launch at login.** Coming in v0.4 via `SMAppService`.
+- **App picker.** Currently you can only bind the currently-focused app; v0.4 adds a `/Applications`-wide picker.
 
 ## Privacy
 
@@ -69,11 +70,13 @@ matosic-menubar/
 ├── Package.swift                 # SPM manifest
 ├── Sources/MatosicMenubar/
 │   ├── main.swift                # Entry point
-│   ├── AppDelegate.swift         # NSStatusItem + NSPopover wiring
+│   ├── AppDelegate.swift         # NSStatusItem + NSPopover wiring, focus→device bridge
 │   ├── FocusObserver.swift       # NSWorkspace focus notification subscriber
 │   ├── ClipboardWatcher.swift    # Opt-in pasteboard-image logger
-│   ├── Profile.swift             # Profile + binding data model
-│   ├── ProfileStore.swift        # JSON persistence
+│   ├── DeviceController.swift    # IOKit HID transport to the macropad
+│   ├── MacropadProtocol.swift    # VIA custom-channel byte layouts
+│   ├── Profile.swift             # Profile + binding data model (layer index lives here)
+│   ├── ProfileStore.swift        # JSON persistence + layer-index migration
 │   └── PopoverView.swift         # SwiftUI popover content
 ├── Resources/
 │   └── Info.plist                # App bundle metadata (LSUIElement = true)
@@ -86,16 +89,16 @@ matosic-menubar/
 
 | Version | What |
 |---|---|
-| **v0.1.0** *(current)* | Menubar HUD, per-app profile binding, JSON profile store |
-| **v0.2.0** | In-app profile editor, app-picker for pre-binding, auto-launch at login, .app code signing + notarization |
-| **v0.3.0** | macropad-firmware roundtrip: auto-switch the device's layer to match the active app (requires QMK firmware on the macropad side) |
-| **v0.4.0** | Per-profile key map preview in the popover (visual 3×3 + encoder), live key-press indication |
+| **v0.1.0** | Menubar HUD, per-app profile binding, JSON profile store |
+| **v0.1.1** | Opt-in clipboard-image saver (`Save screenshots` toggle) |
+| **v0.3.0** *(current)* | macropad-firmware roundtrip: auto-switch the device's active layer to match the focused app, via QMK Raw HID + VIA custom-channel framing |
+| **v0.4.0** | In-app profile editor (add / rename / set layer), app-picker for pre-binding, per-profile visual key map preview, auto-launch at login, .app code signing + notarization |
 | **v1.0** | Homebrew Cask distribution, signed + notarized |
 
 ## Companion projects
 
 - **Macropad PCB** (KiCad source, BOM, case): `github.com/matosichrvoje/matosic-macropad-pcb`
-- **Macropad firmware** (CircuitPython today, QMK in progress): `github.com/matosichrvoje/emisha-macropad`
+- **Macropad firmware** (QMK): `github.com/matosichrvoje/emisha-macropad`
 - **Web landing + browser configurator**: `github.com/matosichrvoje/matosic-macropad-web`
 - **This menubar app**: you're here.
 

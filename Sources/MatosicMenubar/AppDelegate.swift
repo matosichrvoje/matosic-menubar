@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let focus = FocusObserver()
     private let store = ProfileStore()
     private let clipboard = ClipboardWatcher()
+    private let device = DeviceController()
     private var cancellables = Set<AnyCancellable>()
     private var eventMonitor: Any?
 
@@ -37,7 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover = NSPopover()
         popover.behavior = .transient
         let hosting = NSHostingController(
-            rootView: PopoverView(focus: focus, store: store, clipboard: clipboard)
+            rootView: PopoverView(focus: focus, store: store, clipboard: clipboard, device: device)
         )
         // Let SwiftUI's intrinsic size drive the popover; otherwise a fixed
         // contentSize clips the bottom (Quit button) when content grows.
@@ -50,6 +51,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .receive(on: RunLoop.main)
             .sink { [weak self] _, _, _, _ in
                 self?.refreshStatusTitle()
+            }
+            .store(in: &cancellables)
+
+        // Drive the device's active layer in response to focus changes,
+        // bindings edits, or the device coming back online. Disconnected =
+        // no-op; DeviceController.setLayer() drops the command. AppDelegate
+        // re-issues the right SET on the next reconnect because this sink
+        // re-fires when `device.$isConnected` transitions to true.
+        focus.$bundleID
+            .combineLatest(store.$bindings, store.$profiles, device.$isConnected)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] bundleID, _, _, isConnected in
+                guard let self, isConnected else { return }
+                self.device.setLayer(self.store.layerIndex(forBundleID: bundleID))
+            }
+            .store(in: &cancellables)
+
+        // Dim the menubar bird while the macropad is missing. Template
+        // images respect `appearsDisabled`, so this works in both light
+        // and dark menubars without a second asset.
+        device.$isConnected
+            .receive(on: RunLoop.main)
+            .sink { [weak self] connected in
+                self?.statusItem.button?.appearsDisabled = !connected
             }
             .store(in: &cancellables)
 
