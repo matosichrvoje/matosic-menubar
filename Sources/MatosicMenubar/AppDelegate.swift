@@ -18,19 +18,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            // Custom matosic bird (bundled in .app/Contents/Resources/) takes priority.
-            // SF Symbol fallback covers `swift run` dev mode where there's no .app bundle.
-            let image: NSImage? = NSImage(named: "bird-template")
-                ?? NSImage(systemSymbolName: "bird.fill", accessibilityDescription: "Matosic Macropad")
-                ?? NSImage(systemSymbolName: "bird", accessibilityDescription: "Matosic Macropad")
-            if let image {
-                // Apple HIG: menubar icons are 18×18pt within the 22pt menubar height.
-                // PDFs come in at their viewBox size (64pt here) by default — force resize.
-                image.size = NSSize(width: 22, height: 22)
-                image.isTemplate = true
-                button.image = image
-                button.imagePosition = .imageOnly
+            // Bird PDF is loaded via Bundle.module so the same code path
+            // works for both `swift run` (resource bundle in .build/)
+            // and the .app (resource bundle in Contents/Resources/ via
+            // build.sh). Fail loudly if it's missing — silently falling
+            // back to an SF Symbol just hides a packaging bug.
+            guard let url = Bundle.module.url(forResource: "bird-template", withExtension: "pdf"),
+                  let image = NSImage(contentsOf: url) else {
+                fatalError("bird-template.pdf missing from bundle resources")
             }
+            // Apple HIG: menubar icons are 18×18pt within the 22pt menubar height.
+            // PDFs come in at their viewBox size (64pt here) by default — force resize.
+            image.size = NSSize(width: 22, height: 22)
+            image.isTemplate = true
+            image.accessibilityDescription = "Matosic Macropad"
+            button.image = image
+            button.imagePosition = .imageOnly
             button.action = #selector(togglePopover)
             button.target = self
         }

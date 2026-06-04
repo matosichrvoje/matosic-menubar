@@ -10,7 +10,15 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "MatosicMenubar",
-            path: "Sources/MatosicMenubar"
+            path: "Sources/MatosicMenubar",
+            resources: [
+                // Bird PDF is the menubar icon. Bundling it as an SPM
+                // resource lets `swift run` find it via Bundle.module —
+                // otherwise NSImage(named:) misses (no .app bundle) and
+                // the icon silently falls back. The same bundle is
+                // copied into the .app by build.sh.
+                .process("Resources"),
+            ]
         ),
     ]
 )

@@ -45,11 +45,18 @@ mkdir -p "${APP_DIR}/Contents/Resources"
 cp "${EXEC_PATH}" "${APP_DIR}/Contents/MacOS/${APP_NAME}"
 cp Resources/Info.plist "${APP_DIR}/Contents/Info.plist"
 
-# Bundle vector PDF resources (menubar icon). NSImage handles PDFs natively
-# and scales them to any display density — one file instead of @1x/@2x/@3x PNGs.
-for pdf in Resources/*.pdf; do
-    [ -f "$pdf" ] && cp "$pdf" "${APP_DIR}/Contents/Resources/"
-done
+# Copy the SPM-generated resource bundle into the .app. AppDelegate loads
+# the bird PDF via Bundle.module, which looks for this bundle in
+# Bundle.main.resourceURL (= Contents/Resources/ inside an .app).
+# Both arch slices produce identical bundles (it's just data) — grab arm64's.
+RESOURCE_BUNDLE_NAME="${APP_NAME}_${APP_NAME}.bundle"
+ARM64_RESOURCE_BUNDLE="$(swift build -c release --arch arm64 --show-bin-path)/${RESOURCE_BUNDLE_NAME}"
+if [[ ! -d "${ARM64_RESOURCE_BUNDLE}" ]]; then
+    echo "error: SPM resource bundle not found at ${ARM64_RESOURCE_BUNDLE}" >&2
+    echo "  (did you remove resources: from Package.swift?)" >&2
+    exit 1
+fi
+cp -R "${ARM64_RESOURCE_BUNDLE}" "${APP_DIR}/Contents/Resources/"
 
 # Apple wants every .app to have at least an ad-hoc signature so Gatekeeper
 # considers it "signed by no one" rather than "actively tampered with."
